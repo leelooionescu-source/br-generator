@@ -10,22 +10,27 @@ def analyze_master(master_path):
     result = {}
     for sheet_name in xls.sheet_names:
         df = pd.read_excel(xls, sheet_name=sheet_name, header=None)
-        # Find DATA column (scan header row for 'DATA')
+        # Find DATA column and TIP HSD column
         date_col = 40  # default AO
+        tip_hsd_col = 43  # default AR
         for j in range(df.shape[1]):
-            if pd.notna(df.iloc[0, j]) and 'DATA' in str(df.iloc[0, j]).upper():
+            val = str(df.iloc[0, j]).upper() if pd.notna(df.iloc[0, j]) else ''
+            if 'DATA' == val.strip():
                 date_col = j
-                break
+            if 'TIP HSD' in val or 'TIP_HSD' in val:
+                tip_hsd_col = j
         entries = []
         for i in range(1, len(df)):
             poz = df.iloc[i, 1]  # col B = POZITIE HG
             nr_pv = df.iloc[i, 0]  # col A = Nr. PV si Hot
             data = df.iloc[i, date_col]
+            tip_hsd = str(df.iloc[i, tip_hsd_col]).strip().upper() if pd.notna(df.iloc[i, tip_hsd_col]) else ''
             if pd.notna(poz) and pd.notna(nr_pv):
                 entries.append({
                     'pozitie_hg': int(poz),
                     'pv_nr': nr_pv,
                     'data': str(data) if pd.notna(data) else '',
+                    'tip_hsd': tip_hsd,
                 })
         result[sheet_name] = entries
     return result
@@ -275,12 +280,129 @@ def _create_br(template_path, output_path, uat, judet, rows, br_num):
     return len(rows)
 
 
-def generate_all_br(situatie_path, template_br1, template_br11, hg_number, output_dir, recipise_lookup=None):
-    """Genereaza toate BR-urile. Returneaza lista de fisiere generate."""
+def _create_bp(template_path, output_path, uat, judet, rows):
+    """Genereaza un BP din template, pastrand formatarea."""
+    wb = load_workbook(template_path)
+    ws = wb.active
+    max_col = 12
+
+    # Save styles from row 7 (first data row)
+    row7_styles = {}
+    for j in range(1, max_col + 1):
+        cell = ws.cell(row=7, column=j)
+        row7_styles[j] = {
+            'font': copy(cell.font), 'fill': copy(cell.fill),
+            'border': copy(cell.border), 'alignment': copy(cell.alignment),
+            'number_format': cell.number_format,
+        }
+
+    # Save total row styles
+    total_styles = {}
+    for r in range(7, ws.max_row + 1):
+        cell_val = ws.cell(row=r, column=6).value
+        if cell_val and 'TOTAL' in str(cell_val).upper():
+            for j in range(1, max_col + 1):
+                cell = ws.cell(row=r, column=j)
+                total_styles[j] = {
+                    'font': copy(cell.font), 'fill': copy(cell.fill),
+                    'border': copy(cell.border), 'alignment': copy(cell.alignment),
+                    'number_format': cell.number_format,
+                }
+            break
+
+    # Update title row 3 - replace UAT name
+    title_cell = ws.cell(row=3, column=1)
+    if title_cell.value:
+        title_str = str(title_cell.value)
+        # Try to replace locality name placeholder
+        for placeholder in ['Dragomirești-Vale', 'xx', '------']:
+            if placeholder in title_str:
+                title_str = title_str.replace(placeholder, uat)
+        title_cell.value = title_str
+
+    # Clear data rows from row 7 onward and unmerge
+    for r in range(7, ws.max_row + 1):
+        for j in range(1, ws.max_column + 1):
+            try:
+                ws.cell(row=r, column=j).value = None
+            except AttributeError:
+                pass
+    for m in list(ws.merged_cells.ranges):
+        if m.min_row >= 7:
+            ws.unmerge_cells(str(m))
+
+    # Write data rows
+    ds = 7
+    for idx, r in enumerate(rows):
+        rn = ds + idx
+        nr_hot, data_hot = _parse_nr_data(r['nr_data_hot'])
+        vals = [
+            idx + 1,                    # A: Nr. Crt.
+            r['poz'],                   # B: Pozitie HG
+            r['nr_cadastral'],          # C: Indicator cadastral
+            r['suprafata'],             # D: Suprafata expropriata
+            f"{nr_hot}/{data_hot}" if data_hot else nr_hot,  # E: Nr. si data Hotarare
+            r['proprietar_d'],          # F: Persoane indreptatite
+            '',                         # G: CNP/CUI - gol
+            r.get('nr_recipisa', ''),   # H: Nr. Recipisa
+            r['valoare'],               # I: Valoarea despagubirii
+            '',                         # J: Detalii plata - gol
+            '',                         # K: Titular cont - gol
+            '',                         # L: CNP titular cont - gol
+        ]
+        for j, v in enumerate(vals, 1):
+            cell = ws.cell(row=rn, column=j, value=v)
+            if j in row7_styles:
+                cell.font = copy(row7_styles[j]['font'])
+                cell.fill = copy(row7_styles[j]['fill'])
+                cell.border = copy(row7_styles[j]['border'])
+                cell.alignment = copy(row7_styles[j]['alignment'])
+                cell.number_format = row7_styles[j]['number_format']
+
+    # TOTAL row
+    tr = ds + len(rows)
+    for j in range(1, max_col + 1):
+        cell = ws.cell(row=tr, column=j)
+        if j in total_styles:
+            cell.font = copy(total_styles[j]['font'])
+            cell.fill = copy(total_styles[j]['fill'])
+            cell.border = copy(total_styles[j]['border'])
+            cell.alignment = copy(total_styles[j]['alignment'])
+            cell.number_format = total_styles[j]['number_format']
+    ws.cell(row=tr, column=6, value='TOTAL')
+    ws.cell(row=tr, column=9, value=f'=SUM(I{ds}:I{tr-1})')
+
+    # Footer rows
+    fr = tr + 2
+    ws.merge_cells(f'A{fr}:L{fr}')
+    ws.cell(row=fr, column=1, value='Asocierea TOPOVIA 2002 S.R.L. \u2013 STOCAD PROIECT S.R.L. \u2013 \u201cTeaha & Fuzesi\u201d S.C.A. \u2013 \u201cPORTNOI \u0218I ASOCIA\u021aII\u201d S.P.A.R.L. ')
+    ws.merge_cells(f'A{fr+2}:F{fr+2}')
+    ws.cell(row=fr+2, column=1, value='Lider de asociere \u201cTeaha & Fuzesi\u201d ')
+    ws.cell(row=fr+2, column=9, value='Manager de Contract')
+    ws.merge_cells(f'A{fr+3}:F{fr+3}')
+    ws.cell(row=fr+3, column=1, value='Societate Civil\u0103 de Avoca\u021bi, prin')
+    ws.merge_cells(f'A{fr+4}:F{fr+4}')
+    ws.cell(row=fr+4, column=1, value='Av. Fuzesi \u2013 Henis Alexandra Daniela')
+    ws.cell(row=fr+4, column=9, value='Av. Ciprian Portnoi')
+
+    wb.save(output_path)
+    return len(rows)
+
+
+def generate_all_br(situatie_path, template_br1, template_br11, hg_number, output_dir,
+                    recipise_lookup=None, master_data=None, template_bp=None):
+    """Genereaza toate BR-urile si BP-urile. Returneaza lista de fisiere generate."""
     if recipise_lookup is None:
         recipise_lookup = {}
     os.makedirs(output_dir, exist_ok=True)
     sit = pd.read_excel(situatie_path, header=None, sheet_name=0)
+
+    # Build tip_hsd lookup from master_data
+    tip_hsd_lookup = {}
+    if master_data:
+        for sheet_name, entries in master_data.items():
+            for e in entries:
+                tip_hsd_lookup[e['pozitie_hg']] = e.get('tip_hsd', '')
 
     rows_data = []
     for i in range(1, len(sit)):
@@ -298,7 +420,6 @@ def generate_all_br(situatie_path, template_br1, template_br11, hg_number, outpu
         poz_val = sit.iloc[i, 0]
         nr_cad = sit.iloc[i, 6] if pd.notna(sit.iloc[i, 6]) else ''
         nr_cad_str = str(nr_cad).strip()
-        # Lookup recipisa by (pozitie_hg, nr_cadastral)
         try:
             poz_int = int(float(poz_val))
         except (ValueError, TypeError):
@@ -306,6 +427,7 @@ def generate_all_br(situatie_path, template_br1, template_br11, hg_number, outpu
         nr_recipisa = ''
         if poz_int is not None and recipise_lookup:
             nr_recipisa = recipise_lookup.get((poz_int, nr_cad_str), '')
+        tip_hsd = tip_hsd_lookup.get(poz_int, '') if poz_int else ''
         rows_data.append({
             'poz': poz_val,
             'judet': str(sit.iloc[i, 1]).strip() if pd.notna(sit.iloc[i, 1]) else '',
@@ -318,10 +440,15 @@ def generate_all_br(situatie_path, template_br1, template_br11, hg_number, outpu
             'nr_data_hot': str(n_val).strip(),
             'match': d_val == t_str,
             'nr_recipisa': nr_recipisa,
+            'tip_hsd': tip_hsd,
         })
 
-    matches = [r for r in rows_data if r['match']]
-    mismatches = [r for r in rows_data if not r['match']]
+    # Split by tip_hsd
+    br_rows = [r for r in rows_data if r['tip_hsd'] in ('LCA', 'CONSEMNARE', '')]
+    bp_rows = [r for r in rows_data if r['tip_hsd'] == 'PLATA']
+
+    matches = [r for r in br_rows if r['match']]
+    mismatches = [r for r in br_rows if not r['match']]
     generated = []
     hg_clean = hg_number.replace('/', '-')
 
@@ -338,5 +465,13 @@ def generate_all_br(situatie_path, template_br1, template_br11, hg_number, outpu
         fn = f'BR nr. 1.1 UAT {uat} HG {hg_clean}.xlsx'
         n = _create_br(template_br11, os.path.join(output_dir, fn), uat, ur[0]['judet'], ur, '1.1')
         generated.append({'filename': fn, 'uat': uat, 'br_type': 'BR nr. 1.1', 'count': n})
+
+    # BP nr. 1 per UAT
+    if template_bp and bp_rows:
+        for uat in sorted(set(r['uat'] for r in bp_rows)):
+            ur = sorted([r for r in bp_rows if r['uat'] == uat], key=lambda x: x['poz'])
+            fn = f'BP nr. 1 UAT {uat} HG {hg_clean}.xlsx'
+            n = _create_bp(template_bp, os.path.join(output_dir, fn), uat, ur[0]['judet'], ur)
+            generated.append({'filename': fn, 'uat': uat, 'br_type': 'BP nr. 1', 'count': n})
 
     return generated

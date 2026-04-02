@@ -50,36 +50,34 @@ def upload():
         flash('Introduceti numarul HG!', 'error')
         return redirect(url_for('index'))
 
-    files = {
-        'master': request.files.get('master'),
-        'situatie': request.files.get('situatie'),
-        'template_br1': request.files.get('template_br1'),
-        'template_br11': request.files.get('template_br11'),
+    required = {
+        'master': ('MASTER', request.files.get('master')),
+        'situatie': ('SITUATIE', request.files.get('situatie')),
+        'template_br1': ('Template BR nr. 1', request.files.get('template_br1')),
+        'template_br11': ('Template BR nr. 1.1', request.files.get('template_br11')),
     }
-
-    for name, f in files.items():
+    for name, (label, f) in required.items():
         if not f or f.filename == '':
-            labels = {'master': 'MASTER', 'situatie': 'SITUATIE', 'template_br1': 'Template BR nr. 1', 'template_br11': 'Template BR nr. 1.1'}
-            flash(f'Fisierul {labels[name]} este obligatoriu!', 'error')
+            flash(f'Fisierul {label} este obligatoriu!', 'error')
             return redirect(url_for('index'))
 
     upload_dir = get_session_dir('uploads')
-    # Clear previous uploads
     for f in os.listdir(upload_dir):
         os.remove(os.path.join(upload_dir, f))
 
     paths = {}
-    for name, f in files.items():
+    for name, (label, f) in required.items():
         path = os.path.join(upload_dir, f'{name}.xlsx')
         f.save(path)
         paths[name] = path
 
-    # Optional RECIPISE file
-    recipise_file = request.files.get('recipise')
-    if recipise_file and recipise_file.filename != '':
-        rec_path = os.path.join(upload_dir, 'recipise.xlsx')
-        recipise_file.save(rec_path)
-        paths['recipise'] = rec_path
+    # Optional files
+    for opt_name in ['recipise', 'template_bp']:
+        opt_file = request.files.get(opt_name)
+        if opt_file and opt_file.filename != '':
+            opt_path = os.path.join(upload_dir, f'{opt_name}.xlsx')
+            opt_file.save(opt_path)
+            paths[opt_name] = opt_path
 
     session['hg_number'] = hg_number
     session['files'] = paths
@@ -98,6 +96,17 @@ def preview():
     try:
         master_data = analyze_master(paths['master'])
         master_stats = {name: len(entries) for name, entries in master_data.items()}
+        session['master_data_cache'] = True  # flag that master was analyzed
+
+        # Count tip_hsd types
+        tip_counts = {'PLATA': 0, 'LCA': 0, 'CONSEMNARE': 0, 'ALTELE': 0}
+        for entries in master_data.values():
+            for e in entries:
+                tip = e.get('tip_hsd', '')
+                if tip in tip_counts:
+                    tip_counts[tip] += 1
+                elif tip:
+                    tip_counts['ALTELE'] += 1
 
         # Update SITUATIE col N from MASTER
         upload_dir = get_session_dir('uploads')
@@ -117,12 +126,16 @@ def preview():
         flash(f'Eroare la analiza fisierelor: {str(e)}', 'error')
         return redirect(url_for('index'))
 
+    has_bp_template = 'template_bp' in paths
+
     return render_template('preview.html',
         hg_number=hg_number,
         master_stats=master_stats,
         update_result=update_result,
         stats=stats,
-        recipise_stats=recipise_stats)
+        recipise_stats=recipise_stats,
+        tip_counts=tip_counts,
+        has_bp_template=has_bp_template)
 
 
 @app.route('/generate', methods=['POST'])
@@ -148,13 +161,18 @@ def generate():
         if 'recipise' in paths:
             recipise_lookup = parse_recipise(paths['recipise'])
 
+        # Parse MASTER for tip_hsd
+        master_data = analyze_master(paths['master'])
+
         generated = generate_all_br(
             updated_situatie,
             paths['template_br1'],
             paths['template_br11'],
             hg_number,
             output_dir,
-            recipise_lookup=recipise_lookup
+            recipise_lookup=recipise_lookup,
+            master_data=master_data,
+            template_bp=paths.get('template_bp'),
         )
         session['generated'] = generated
     except Exception as e:
@@ -174,12 +192,14 @@ def results():
     hg_number = session.get('hg_number', '')
     total_match = sum(g['count'] for g in generated if g['br_type'] == 'BR nr. 1')
     total_mismatch = sum(g['count'] for g in generated if g['br_type'] == 'BR nr. 1.1')
+    total_bp = sum(g['count'] for g in generated if g['br_type'] == 'BP nr. 1')
 
     return render_template('results.html',
         hg_number=hg_number,
         generated=generated,
         total_match=total_match,
-        total_mismatch=total_mismatch)
+        total_mismatch=total_mismatch,
+        total_bp=total_bp)
 
 
 @app.route('/download/<filename>')

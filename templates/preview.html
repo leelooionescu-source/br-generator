@@ -32,6 +32,19 @@
                 </div>
                 {% endif %}
 
+                <!-- Tip HSD breakdown -->
+                <div class="alert alert-secondary">
+                    <strong>Tip HSD din MASTER:</strong>
+                    LCA: {{ tip_counts.LCA }} |
+                    Consemnare: {{ tip_counts.CONSEMNARE }} |
+                    Plata: {{ tip_counts.PLATA }}
+                    {% if tip_counts.PLATA > 0 and has_bp_template %}
+                        &mdash; <span class="text-success">Template BP incarcat, se vor genera BP-uri</span>
+                    {% elif tip_counts.PLATA > 0 and not has_bp_template %}
+                        &mdash; <span class="text-warning">Template BP neincărcat, BP-urile NU se vor genera</span>
+                    {% endif %}
+                </div>
+
                 <!-- SITUATIE stats -->
                 <h5>Analiza SITUATIE</h5>
                 <div class="row mb-3">

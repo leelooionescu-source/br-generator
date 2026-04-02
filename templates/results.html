@@ -8,19 +8,25 @@
             </div>
             <div class="card-body">
                 <div class="row mb-4">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <div class="border rounded p-3 text-center bg-success bg-opacity-10">
                             <div class="text-muted small">BR nr. 1 (proprietar identic)</div>
                             <div class="fw-bold fs-3 text-success">{{ total_match }} imobile</div>
                         </div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <div class="border rounded p-3 text-center bg-warning bg-opacity-10">
                             <div class="text-muted small">BR nr. 1.1 (proprietar diferit)</div>
                             <div class="fw-bold fs-3 text-warning">{{ total_mismatch }} imobile</div>
                         </div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
+                        <div class="border rounded p-3 text-center bg-info bg-opacity-10">
+                            <div class="text-muted small">BP nr. 1 (plata)</div>
+                            <div class="fw-bold fs-3 text-info">{{ total_bp }} imobile</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
                         <div class="border rounded p-3 text-center bg-primary bg-opacity-10">
                             <div class="text-muted small">Total fisiere generate</div>
                             <div class="fw-bold fs-3 text-primary">{{ generated|length }}</div>
@@ -48,6 +54,8 @@
                             <td>
                                 {% if g.br_type == 'BR nr. 1' %}
                                 <span class="badge bg-success">{{ g.br_type }}</span>
+                                {% elif g.br_type == 'BP nr. 1' %}
+                                <span class="badge bg-info">{{ g.br_type }}</span>
                                 {% else %}
                                 <span class="badge bg-warning text-dark">{{ g.br_type }}</span>
                                 {% endif %}
