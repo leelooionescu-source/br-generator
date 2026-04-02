@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-info text-white">
+                <h4 class="mb-0">Pas 2: Previzualizare - HG nr. {{ hg_number }}</h4>
+            </div>
+            <div class="card-body">
+                <!-- MASTER stats -->
+                <h5>Date din MASTER</h5>
+                <div class="row mb-3">
+                    {% for sheet, count in master_stats.items() %}
+                    <div class="col-md-4 mb-2">
+                        <div class="border rounded p-3 text-center">
+                            <div class="text-muted small">UAT</div>
+                            <div class="fw-bold fs-5">{{ sheet }}</div>
+                            <div class="text-primary">{{ count }} PV-uri / hotarari</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Update result -->
+                <div class="alert alert-success">
+                    <strong>Coloana N actualizata:</strong> {{ update_result.updated }} pozitii completate cu NR./DATA HOTARARE (din {{ update_result.total_master }} in MASTER)
+                </div>
+
+                {% if recipise_stats is not none %}
+                <div class="alert alert-info">
+                    <strong>RECIPISE:</strong> {{ recipise_stats }} recipise incarcate. Nr. recipisa va fi adaugat in BR nr. 1 si BR nr. 1.1.
+                </div>
+                {% endif %}
+
+                <!-- SITUATIE stats -->
+                <h5>Analiza SITUATIE</h5>
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <div class="border rounded p-3 text-center">
+                            <div class="text-muted small">Total pozitii</div>
+                            <div class="fw-bold fs-4">{{ stats.total_situatie }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="border rounded p-3 text-center">
+                            <div class="text-muted small">De procesat (col N completata)</div>
+                            <div class="fw-bold fs-4 text-primary">{{ stats.total_procesabile }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="border rounded p-3 text-center bg-success bg-opacity-10">
+                            <div class="text-muted small">Proprietar identic (BR nr.1)</div>
+                            <div class="fw-bold fs-4 text-success">{{ stats.total_match }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="border rounded p-3 text-center bg-warning bg-opacity-10">
+                            <div class="text-muted small">Proprietar diferit (BR nr.1.1)</div>
+                            <div class="fw-bold fs-4 text-warning">{{ stats.total_mismatch }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Per UAT breakdown -->
+                <h5>Detalii per UAT</h5>
+                <table class="table table-bordered table-sm">
+                    <thead class="table-light">
+                        <tr>
+                            <th>UAT</th>
+                            <th>Judet</th>
+                            <th>Total pozitii</th>
+                            <th class="text-success">BR nr. 1 (identic)</th>
+                            <th class="text-warning">BR nr. 1.1 (diferit)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for u in stats.uats %}
+                        <tr>
+                            <td class="fw-bold">{{ u.uat }}</td>
+                            <td>{{ u.judet }}</td>
+                            <td class="text-center">{{ u.total }}</td>
+                            <td class="text-center text-success fw-bold">{{ u.match }}</td>
+                            <td class="text-center text-warning fw-bold">{{ u.mismatch }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="/" class="btn btn-outline-secondary">Inapoi - Reincarcare fisiere</a>
+                    <form action="/generate" method="post">
+                        <button type="submit" class="btn btn-success btn-lg">Genereaza Borderourile</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

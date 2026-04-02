@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card shadow-sm">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0">Pas 3: Rezultate - HG nr. {{ hg_number }}</h4>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="border rounded p-3 text-center bg-success bg-opacity-10">
+                            <div class="text-muted small">BR nr. 1 (proprietar identic)</div>
+                            <div class="fw-bold fs-3 text-success">{{ total_match }} imobile</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="border rounded p-3 text-center bg-warning bg-opacity-10">
+                            <div class="text-muted small">BR nr. 1.1 (proprietar diferit)</div>
+                            <div class="fw-bold fs-3 text-warning">{{ total_mismatch }} imobile</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="border rounded p-3 text-center bg-primary bg-opacity-10">
+                            <div class="text-muted small">Total fisiere generate</div>
+                            <div class="fw-bold fs-3 text-primary">{{ generated|length }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <table class="table table-bordered table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Fisier</th>
+                            <th>UAT</th>
+                            <th>Tip</th>
+                            <th>Nr. imobile</th>
+                            <th>Descarca</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for g in generated %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td class="fw-bold">{{ g.filename }}</td>
+                            <td>{{ g.uat }}</td>
+                            <td>
+                                {% if g.br_type == 'BR nr. 1' %}
+                                <span class="badge bg-success">{{ g.br_type }}</span>
+                                {% else %}
+                                <span class="badge bg-warning text-dark">{{ g.br_type }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center fw-bold">{{ g.count }}</td>
+                            <td>
+                                <a href="/download/{{ g.filename }}" class="btn btn-sm btn-outline-primary">Descarca</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="/" class="btn btn-outline-secondary">Procesare Noua</a>
+                    <div class="d-flex gap-2">
+                        <a href="/download-situatie" class="btn btn-info text-white">Descarca SITUATIE actualizata</a>
+                        <a href="/download-all" class="btn btn-primary btn-lg">Descarca Tot (ZIP)</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

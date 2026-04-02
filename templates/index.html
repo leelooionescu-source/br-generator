@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Pas 1: Incarcati fisierele</h4>
+            </div>
+            <div class="card-body">
+                <form action="/upload" method="post" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Numar HG *</label>
+                        <input type="text" name="hg_number" class="form-control" placeholder="Ex: 1119/2023, 1503/2024..." required>
+                        <div class="form-text">Numarul Hotararii de Guvern</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Fisier MASTER (convocari si HSD) *</label>
+                        <input type="file" name="master" class="form-control" accept=".xlsx,.xls" required>
+                        <div class="form-text">Contine sheet-uri per UAT cu Nr. PV (col A), Pozitie HG (col B), Data (col AO)</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Fisier SITUATIE TOTAL *</label>
+                        <input type="file" name="situatie" class="form-control" accept=".xlsx,.xls" required>
+                        <div class="form-text">Lista completa imobile cu proprietari (col D si col T)</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Fisier RECIPISE HG <small class="text-muted">(optional)</small></label>
+                        <input type="file" name="recipise" class="form-control" accept=".xlsx,.xls">
+                        <div class="form-text">Contine nr. recipisa per pozitie HG si nr. cadastral. Coloanele sunt detectate automat din header.</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Template BR nr. 1 *</label>
+                            <input type="file" name="template_br1" class="form-control" accept=".xlsx,.xls" required>
+                            <div class="form-text">Borderou proprietar identic</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Template BR nr. 1.1 *</label>
+                            <input type="file" name="template_br11" class="form-control" accept=".xlsx,.xls" required>
+                            <div class="form-text">Borderou proprietar diferit</div>
+                        </div>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">Incarca si Analizeaza</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
