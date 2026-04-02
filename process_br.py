@@ -454,14 +454,14 @@ def generate_all_br(situatie_path, template_br1, template_br11, hg_number, outpu
 
     # BR nr. 1 per UAT
     for uat in sorted(set(r['uat'] for r in matches)):
-        ur = sorted([r for r in matches if r['uat'] == uat], key=lambda x: x['poz'])
+        ur = sorted([r for r in matches if r['uat'] == uat], key=lambda x: int(float(x['poz'])))
         fn = f'BR nr. 1 UAT {uat} HG {hg_clean}.xlsx'
         n = _create_br(template_br1, os.path.join(output_dir, fn), uat, ur[0]['judet'], ur, '1')
         generated.append({'filename': fn, 'uat': uat, 'br_type': 'BR nr. 1', 'count': n})
 
     # BR nr. 1.1 per UAT
     for uat in sorted(set(r['uat'] for r in mismatches)):
-        ur = sorted([r for r in mismatches if r['uat'] == uat], key=lambda x: x['poz'])
+        ur = sorted([r for r in mismatches if r['uat'] == uat], key=lambda x: int(float(x['poz'])))
         fn = f'BR nr. 1.1 UAT {uat} HG {hg_clean}.xlsx'
         n = _create_br(template_br11, os.path.join(output_dir, fn), uat, ur[0]['judet'], ur, '1.1')
         generated.append({'filename': fn, 'uat': uat, 'br_type': 'BR nr. 1.1', 'count': n})
@@ -469,7 +469,7 @@ def generate_all_br(situatie_path, template_br1, template_br11, hg_number, outpu
     # BP nr. 1 per UAT
     if template_bp and bp_rows:
         for uat in sorted(set(r['uat'] for r in bp_rows)):
-            ur = sorted([r for r in bp_rows if r['uat'] == uat], key=lambda x: x['poz'])
+            ur = sorted([r for r in bp_rows if r['uat'] == uat], key=lambda x: int(float(x['poz'])))
             fn = f'BP nr. 1 UAT {uat} HG {hg_clean}.xlsx'
             n = _create_bp(template_bp, os.path.join(output_dir, fn), uat, ur[0]['judet'], ur)
             generated.append({'filename': fn, 'uat': uat, 'br_type': 'BP nr. 1', 'count': n})
