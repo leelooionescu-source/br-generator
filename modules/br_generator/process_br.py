@@ -108,55 +108,72 @@ def analyze_situatie(situatie_path):
 
 
 def parse_recipise(recipise_path):
-    """Citeste fisierul RECIPISE si returneaza lookup dict {(pozitie_hg, nr_cadastral): nr_recipisa}.
-    Scaneaza header-ul pentru a detecta automat coloanele."""
-    df = pd.read_excel(recipise_path, header=None, sheet_name=0)
-    if df.empty:
-        return {}
+    """Citeste fisierul RECIPISE si returneaza lookup dict {(nr_crt, nr_cadastral): nr_recipisa}.
+    Foloseste openpyxl pentru a detecta corect coloanele (inclusiv merged cells)."""
+    wb = load_workbook(recipise_path, data_only=True)
+    ws = wb.active
 
-    # Scan header row for column indices
-    poz_col = None
+    # Scan first 10 rows for header columns
+    crt_col = None
     cad_col = None
     rec_col = None
     header_row = 0
 
-    for i in range(min(5, len(df))):
-        for j in range(df.shape[1]):
-            val = str(df.iloc[i, j]).strip().upper() if pd.notna(df.iloc[i, j]) else ''
-            if not val:
+    for row in range(1, min(11, ws.max_row + 1)):
+        for col in range(1, ws.max_column + 1):
+            val = ws.cell(row=row, column=col).value
+            if val is None:
                 continue
-            if any(k in val for k in ['POZIT', 'POZ.', 'POZ ', 'NR. CRT', 'NR.CRT', 'POZITIE', 'POZITIA', 'POZIȚIA', 'POZIŢIA']):
-                if 'HG' in val or poz_col is None:
-                    poz_col = j
-                    header_row = i
-            if any(k in val for k in ['CADASTRAL', 'NR. CAD', 'NR.CAD', 'NR CAD', 'NUMAR CADASTRAL']):
-                cad_col = j
-                header_row = i
-            if any(k in val for k in ['RECIPIS', 'NR. RECIPIS', 'NR.RECIPIS', 'NR RECIPIS', 'RECIPISA']):
-                rec_col = j
-                header_row = i
+            val_upper = str(val).strip().upper()
+            if any(k in val_upper for k in ['NR. CRT', 'NR.CRT', 'POZIT', 'POZ.']):
+                if crt_col is None:
+                    crt_col = col
+                    header_row = row
+            if any(k in val_upper for k in ['CADASTRAL', 'NR. CAD', 'NR.CAD', 'NUMAR CADASTRAL']):
+                cad_col = col
+                header_row = row
+            if 'RECIPIS' in val_upper:
+                rec_col = col
+                header_row = row
 
-    if poz_col is None or cad_col is None or rec_col is None:
+    if rec_col is None:
         raise ValueError(
-            f'Nu am gasit coloanele necesare in RECIPISE. '
-            f'Pozitie HG: {"gasit" if poz_col is not None else "LIPSA"}, '
+            f'Nu am gasit coloana "Recipisa" in fisierul RECIPISE. '
+            f'Nr. crt: {"gasit" if crt_col is not None else "LIPSA"}, '
             f'Nr. cadastral: {"gasit" if cad_col is not None else "LIPSA"}, '
-            f'Nr. recipisa: {"gasit" if rec_col is not None else "LIPSA"}. '
-            f'Verificati ca header-ul contine aceste coloane.'
+            f'Recipisa: LIPSA. '
+            f'Verificati ca header-ul contine cuvantul "Recipisa".'
         )
 
+    # Skip number row (0, 1, 2, 3...) if present
+    data_start = header_row + 1
+    check_val = ws.cell(row=data_start, column=1).value
+    if check_val is not None and str(check_val).strip() in ('0', '00'):
+        data_start += 1
+
     lookup = {}
-    for i in range(header_row + 1, len(df)):
-        poz_val = df.iloc[i, poz_col]
-        cad_val = df.iloc[i, cad_col]
-        rec_val = df.iloc[i, rec_col]
-        if pd.notna(poz_val) and pd.notna(cad_val) and pd.notna(rec_val):
+    for row in range(data_start, ws.max_row + 1):
+        crt_val = ws.cell(row=row, column=crt_col).value if crt_col else None
+        cad_val = ws.cell(row=row, column=cad_col).value if cad_col else None
+        rec_val = ws.cell(row=row, column=rec_col).value
+
+        if rec_val is None or str(rec_val).strip() == '':
+            continue
+
+        rec_str = str(rec_val).strip()
+
+        if crt_val is not None and cad_val is not None:
             try:
-                poz_key = int(float(poz_val))
+                crt_key = int(float(crt_val))
             except (ValueError, TypeError):
                 continue
             cad_key = str(cad_val).strip()
-            lookup[(poz_key, cad_key)] = str(rec_val).strip()
+            lookup[(crt_key, cad_key)] = rec_str
+        elif cad_val is not None:
+            cad_key = str(cad_val).strip()
+            lookup[('', cad_key)] = rec_str
+
+    wb.close()
     return lookup
 
 
