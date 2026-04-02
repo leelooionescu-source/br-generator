@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-warning text-dark">
+                <h4 class="mb-0">Pas 2: Procesare OCR si verificare</h4>
+            </div>
+            <div class="card-body text-center">
+                <div id="processing">
+                    <div class="spinner-border text-danger mb-3" style="width: 3rem; height: 3rem;"></div>
+                    <h5>Se proceseaza {{ doc_count }} fisiere Word...</h5>
+                    <p class="text-muted">Extragere date + comparare cu MASTER</p>
+                    <div class="progress mb-3" style="height: 25px;">
+                        <div id="progressBar" class="progress-bar bg-danger" style="width: 0%">0%</div>
+                    </div>
+                    <p id="progressText" class="text-muted small"></p>
+                </div>
+                <div id="done" style="display:none;">
+                    <h4 class="text-success">Procesare completa!</h4>
+                    <a href="/hpv/results" class="btn btn-success btn-lg mt-3">Vezi Rezultatele</a>
+                </div>
+                <div id="error" style="display:none;">
+                    <h4 class="text-danger">Eroare la procesare</h4>
+                    <p id="errorText" class="text-danger"></p>
+                    <a href="/" class="btn btn-outline-secondary mt-3">Inapoi</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    // Start processing (returns immediately, runs in background)
+    fetch("/hpv/run-process', {method: 'POST'}).then(r => r.json()).catch(e => {
+        // Even if fetch fails due to timeout, background thread continues
+    });
+
+    // Poll progress until done
+    const interval = setInterval(() => {
+        fetch("/hpv/progress').then(r => r.json()).then(d => {
+            if (d.total > 0) {
+                const pct = Math.round(d.current / d.total * 100);
+                document.getElementById('progressBar').style.width = pct + '%';
+                document.getElementById('progressBar').textContent = pct + '%';
+                document.getElementById('progressText').textContent =
+                    `${d.current} / ${d.total} - ${d.file}`;
+            }
+            if (d.done) {
+                clearInterval(interval);
+                if (d.error) {
+                    document.getElementById('processing').style.display = 'none';
+                    document.getElementById('error').style.display = 'block';
+                    document.getElementById('errorText').textContent = d.error;
+                } else {
+                    document.getElementById('processing').style.display = 'none';
+                    document.getElementById('done').style.display = 'block';
+                }
+            }
+        }).catch(() => {});
+    }, 2000);
+</script>
+{% endblock %}

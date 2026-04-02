@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="text-center mb-5">
+            <h1 class="display-5 fw-bold text-primary">Instrumente Exproprieri</h1>
+            <p class="lead text-muted">Selectati modulul dorit</p>
+        </div>
+        <div class="row g-4 justify-content-center">
+            <div class="col-md-5">
+                <div class="card shadow-sm h-100 border-primary">
+                    <div class="card-header bg-primary text-white text-center py-3">
+                        <h4 class="mb-0">Generator BR / BP</h4>
+                    </div>
+                    <div class="card-body d-flex flex-column">
+                        <p>Generare automata de Borderouri de Reconsemnare (BR) si Borderouri de Plata (BP) din MASTER si SITUATIE TOTAL HG.</p>
+                        <ul class="small text-muted">
+                            <li>BR nr. 1 - proprietar identic</li>
+                            <li>BR nr. 1.1 - proprietar diferit</li>
+                            <li>BP nr. 1 - plata (tip HSD = PLATA)</li>
+                        </ul>
+                        <div class="mt-auto d-grid">
+                            <a href="/br/" class="btn btn-primary btn-lg">Deschide</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-5">
+                <div class="card shadow-sm h-100 border-danger">
+                    <div class="card-header bg-danger text-white text-center py-3">
+                        <h4 class="mb-0">Verificare H si PV</h4>
+                    </div>
+                    <div class="card-body d-flex flex-column">
+                        <p>Verificare automata a informatiilor din fisierele Word (Hotarari si Procese Verbale) cu datele din MASTER.</p>
+                        <ul class="small text-muted">
+                            <li>Compara: UAT, judet, pozitie HG, nr. cadastral, proprietar, suprafata, valoare</li>
+                            <li>Genereaza raport Excel cu neconcordantele gasite</li>
+                        </ul>
+                        <div class="mt-auto d-grid">
+                            <a href="/hpv/" class="btn btn-danger btn-lg">Deschide</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

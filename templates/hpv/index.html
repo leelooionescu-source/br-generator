@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-dark text-white">
+                <h4 class="mb-0">Pas 1: Incarcati fisierele</h4>
+            </div>
+            <div class="card-body">
+                <form action="/hpv/upload" method="post" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Fisier MASTER general convocari si HSD *</label>
+                        <input type="file" name="master" class="form-control" accept=".xlsx,.xls" required>
+                        <div class="form-text">Excel cu sheet-uri per UAT</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Fisiere Word - H si PV (.docx) *</label>
+                        <input type="file" name="docs" class="form-control" accept=".docx" multiple required>
+                        <div class="form-text">Selectati toate fisierele Word H si PV (se pot selecta mai multe odata). Un fisier poate contine mai multe H+PV.</div>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-danger btn-lg">Incarca si Verifica</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

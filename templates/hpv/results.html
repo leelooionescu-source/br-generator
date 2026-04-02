@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-dark text-white">
+                <h4 class="mb-0">Pas 3: Rezultate verificare</h4>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="border rounded p-3 text-center">
+                            <div class="text-muted small">Total documente verificate</div>
+                            <div class="fw-bold fs-3">{{ results|length }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="border rounded p-3 text-center bg-success bg-opacity-10">
+                            <div class="text-muted small">OK (fara neconcordante)</div>
+                            <div class="fw-bold fs-3 text-success">{{ total_ok }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="border rounded p-3 text-center bg-danger bg-opacity-10">
+                            <div class="text-muted small">Cu neconcordante</div>
+                            <div class="fw-bold fs-3 text-danger">{{ total_issues }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="border rounded p-3 text-center bg-warning bg-opacity-10">
+                            <div class="text-muted small">Total neconcordante</div>
+                            <div class="fw-bold fs-3 text-warning">{{ total_neconcordante }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                {% if total_issues > 0 %}
+                <h5 class="text-danger">Neconcordante gasite:</h5>
+                <table class="table table-bordered table-sm table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Fisier PDF</th>
+                            <th>Nr. PV</th>
+                            <th>UAT</th>
+                            <th>Poz. HG</th>
+                            <th>Camp</th>
+                            <th>Valoare MASTER</th>
+                            <th>Valoare PDF</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in results if r.issues %}
+                        {% for issue in r.issues %}
+                        <tr>
+                            {% if loop.first %}
+                            <td rowspan="{{ r.issues|length }}" class="fw-bold align-middle">{{ r.source_file }}</td>
+                            <td rowspan="{{ r.issues|length }}" class="text-center align-middle">{{ r.nr_pv }}</td>
+                            <td rowspan="{{ r.issues|length }}" class="align-middle">{{ r.uat }}</td>
+                            <td rowspan="{{ r.issues|length }}" class="text-center align-middle">{{ r.pozitie_hg }}</td>
+                            {% endif %}
+                            <td class="text-danger fw-bold">{{ issue.camp }}</td>
+                            <td>{{ issue.master }}</td>
+                            <td>{{ issue.pdf }}</td>
+                        </tr>
+                        {% endfor %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="alert alert-success fs-5 text-center">
+                    Toate documentele corespund cu datele din MASTER!
+                </div>
+                {% endif %}
+
+                <h5 class="mt-4">Toate documentele:</h5>
+                <table class="table table-bordered table-sm">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Fisier</th>
+                            <th>Nr. PV</th>
+                            <th>UAT</th>
+                            <th>Proprietar</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in results %}
+                        <tr class="{{ 'table-danger' if r.issues else 'table-success' }}">
+                            <td>{{ loop.index }}</td>
+                            <td>{{ r.source_file }}</td>
+                            <td class="text-center">{{ r.nr_pv }}</td>
+                            <td>{{ r.uat }}</td>
+                            <td>{{ r.proprietar }}</td>
+                            <td>
+                                {% if r.issues %}
+                                <span class="badge bg-danger">{{ r.issues|length }} neconcordante</span>
+                                {% else %}
+                                <span class="badge bg-success">OK</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="/hpv/" class="btn btn-outline-secondary">Verificare Noua</a>
+                    <a href="/hpv/download-report" class="btn btn-danger btn-lg">Descarca Raport Neconcordante (Excel)</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
