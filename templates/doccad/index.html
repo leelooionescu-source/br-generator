@@ -64,10 +64,42 @@
 </div>
 
 <script>
-document.getElementById('uploadForm').addEventListener('submit', function() {
+// Disable inputs in inactive tabs so they don't interfere
+function updateTabInputs() {
+    var activeTab = document.querySelector('.tab-pane.active');
+    var allPanes = document.querySelectorAll('.tab-pane');
+    allPanes.forEach(function(pane) {
+        var inputs = pane.querySelectorAll('input[type="file"]');
+        inputs.forEach(function(inp) {
+            if (pane === activeTab) {
+                inp.disabled = false;
+            } else {
+                inp.disabled = true;
+                inp.value = '';  // Clear selection from inactive tab
+            }
+        });
+    });
+}
+
+// Listen for tab changes
+document.querySelectorAll('[data-bs-toggle="tab"]').forEach(function(tab) {
+    tab.addEventListener('shown.bs.tab', updateTabInputs);
+});
+
+// Initial state
+updateTabInputs();
+
+document.getElementById('uploadForm').addEventListener('submit', function(e) {
+    var activeTab = document.querySelector('.tab-pane.active');
+    var activeInput = activeTab.querySelector('input[type="file"]');
+    if (!activeInput || !activeInput.files || activeInput.files.length === 0) {
+        e.preventDefault();
+        alert('Selectati fisierele documentatii cadastrale!');
+        return;
+    }
     var btn = document.getElementById('btnSubmit');
     btn.disabled = true;
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Se analizeaza...';
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Se analizeaza... (poate dura cateva minute)';
 });
 </script>
 {% endblock %}

@@ -70,6 +70,14 @@ def upload():
     doc_zip = request.files.get('doc_zip')
     doc_files = request.files.getlist('doc_files')
 
+    logger.info(f"Upload - doc_zip: {doc_zip.filename if doc_zip and doc_zip.filename else 'None'}")
+    logger.info(f"Upload - doc_files count: {len([f for f in doc_files if f.filename])}")
+    if doc_files:
+        for f in doc_files[:5]:
+            logger.info(f"  doc_file: {f.filename}")
+        if len(doc_files) > 5:
+            logger.info(f"  ... and {len(doc_files) - 5} more")
+
     extract_dir = os.path.join(doccad_dir, 'documentatii')
     os.makedirs(extract_dir, exist_ok=True)
 
