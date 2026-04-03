@@ -1013,10 +1013,17 @@ def extract_folder_data(folder_path):
 
 
 # ── Detection & scanning ────────────────────────────────────────────────
-def detect_doc_type(extract_dir):
+def detect_doc_type(extract_dir, depth=0):
     """Detect documentation type: 'scan_complet' or 'folder_structure'.
+    Searches recursively through wrapper folders up to 5 levels deep.
     Returns (type_str, items_list)."""
-    items = os.listdir(extract_dir)
+    if depth > 5:
+        return 'unknown', []
+
+    try:
+        items = os.listdir(extract_dir)
+    except OSError:
+        return 'unknown', []
 
     # Check for folders with numeric names (folder structure type)
     folder_items = []
@@ -1034,11 +1041,11 @@ def detect_doc_type(extract_dir):
     elif pdf_items:
         return 'scan_complet', pdf_items
     else:
-        # Check subdirectories (ZIP might have a wrapper folder)
+        # Check ALL subdirectories (ZIP/folder upload may have wrapper folders)
         for item in items:
             full = os.path.join(extract_dir, item)
             if os.path.isdir(full):
-                sub_type, sub_items = detect_doc_type(full)
+                sub_type, sub_items = detect_doc_type(full, depth + 1)
                 if sub_items:
                     return sub_type, sub_items
         return 'unknown', []
