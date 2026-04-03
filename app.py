@@ -4,7 +4,7 @@ import shutil
 from flask import Flask, render_template
 
 app = Flask(__name__)
-app.secret_key = 'exproprieri-tools-secret-2026'
+app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'exproprieri-tools-secret-2026')
 app.config['MAX_CONTENT_LENGTH'] = 200 * 1024 * 1024
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -15,9 +15,11 @@ for d in ['uploads', 'output']:
 from modules.br_generator.routes import bp as br_bp
 from modules.verificare_hpv.routes import bp as hpv_bp
 from modules.organizare_dosare.routes import bp as org_bp
+from modules.doc_cadastrale.routes import bp as doccad_bp
 app.register_blueprint(br_bp)
 app.register_blueprint(hpv_bp)
 app.register_blueprint(org_bp)
+app.register_blueprint(doccad_bp)
 
 
 def cleanup_old_sessions():

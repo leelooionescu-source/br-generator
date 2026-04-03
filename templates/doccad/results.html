@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white text-center py-3">
+                <h3 class="mb-0">Rezultate - Documentatii Cadastrale</h3>
+            </div>
+            <div class="card-body">
+                <!-- Summary stats -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-3">
+                        <div class="card text-center border-primary">
+                            <div class="card-body py-2">
+                                <h4 class="mb-0 text-primary">{{ summary.total_processed }}</h4>
+                                <small class="text-muted">Procesate</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center border-success">
+                            <div class="card-body py-2">
+                                <h4 class="mb-0 text-success">{{ summary.total_ok }}</h4>
+                                <small class="text-muted">OK</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center border-danger">
+                            <div class="card-body py-2">
+                                <h4 class="mb-0 text-danger">{{ summary.total_diff }}</h4>
+                                <small class="text-muted">Cu diferente</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center border-warning">
+                            <div class="card-body py-2">
+                                <h4 class="mb-0 text-warning">{{ summary.total_skipped }}</h4>
+                                <small class="text-muted">Sarite</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {% if summary.errors %}
+                <div class="alert alert-danger">
+                    <strong>Erori ({{ summary.errors|length }}):</strong>
+                    <ul class="mb-0 mt-1">
+                        {% for err in summary.errors %}
+                        <li>Pozitia {{ err.pozitie }}: {{ err.error }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+
+                <div class="alert alert-success">
+                    <strong>{{ output_name }}</strong> a fost generat cu succes!
+                    <br><small>Pozitiile OK sunt colorate verde, cele cu diferente sunt colorate rosu.</small>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center">
+                    <a href="{{ url_for('doccad.index') }}" class="btn btn-outline-secondary">Proceseaza alte documentatii</a>
+                    <a href="{{ url_for('doccad.download') }}" class="btn btn-success btn-lg">
+                        Descarca {{ output_name }}
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="text-center mt-3">
+            <a href="/" class="btn btn-outline-secondary">Inapoi la meniu</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

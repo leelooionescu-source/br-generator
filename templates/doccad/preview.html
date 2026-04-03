@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-12">
+        <div class="card shadow mb-4">
+            <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">Previzualizare - Documentatii Cadastrale</h4>
+                <span class="badge bg-light text-dark">{{ type_label }}</span>
+            </div>
+            <div class="card-body">
+                <!-- Stats -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-2">
+                        <div class="card text-center border-primary">
+                            <div class="card-body py-2">
+                                <h5 class="mb-0 text-primary">{{ total }}</h5>
+                                <small class="text-muted">Total pozitii</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="card text-center border-success">
+                            <div class="card-body py-2">
+                                <h5 class="mb-0 text-success">{{ ok_count }}</h5>
+                                <small class="text-muted">OK (fara diferente)</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="card text-center border-danger">
+                            <div class="card-body py-2">
+                                <h5 class="mb-0 text-danger">{{ diff_count }}</h5>
+                                <small class="text-muted">Cu diferente</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="card text-center border-warning">
+                            <div class="card-body py-2">
+                                <h5 class="mb-0 text-warning">{{ filled_count }}</h5>
+                                <small class="text-muted">Deja completate</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="card text-center border-secondary">
+                            <div class="card-body py-2">
+                                <h5 class="mb-0 text-secondary">{{ not_found_count }}</h5>
+                                <small class="text-muted">Negasite in Excel</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="card text-center border-info">
+                            <div class="card-body py-2">
+                                <h5 class="mb-0 text-info">{{ to_process }}</h5>
+                                <small class="text-muted">De procesat</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="text-muted small">Situatie: <strong>{{ situatie_name }}</strong></p>
+
+                <!-- Preview table -->
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered table-hover small">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Poz HG</th>
+                                <th>Fisier/Folder</th>
+                                <th>Proprietar (CF)</th>
+                                <th>Nr. Cad</th>
+                                <th>Nr. CF</th>
+                                <th>Categorie</th>
+                                <th>Ext/Int</th>
+                                <th>Sup. totala</th>
+                                <th>Sup. exp.</th>
+                                <th>Admitere</th>
+                                <th>OBSERVATII</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in preview %}
+                            <tr class="{% if p.error %}table-danger{% elif p.already_filled %}table-warning{% elif p.not_found %}table-secondary{% elif p.is_ok %}table-success{% elif p.get('observatii') and p.observatii != 'OK' %}table-danger{% endif %}">
+                                <td class="fw-bold">{{ p.pozitie }}</td>
+                                <td class="text-truncate" style="max-width: 150px;" title="{{ p.folder_name }}">{{ p.folder_name }}</td>
+                                {% if p.error %}
+                                <td colspan="9" class="text-danger">{{ p.error }}</td>
+                                <td><span class="badge bg-danger">Eroare</span></td>
+                                {% elif p.already_filled %}
+                                <td colspan="9" class="text-warning">Pozitia este deja completata in Excel</td>
+                                <td><span class="badge bg-warning text-dark">Skip</span></td>
+                                {% elif p.not_found %}
+                                <td colspan="9" class="text-secondary">Pozitia nu a fost gasita in Excel</td>
+                                <td><span class="badge bg-secondary">Negasit</span></td>
+                                {% else %}
+                                <td class="text-truncate" style="max-width: 150px;" title="{{ p.titular }}">{{ p.titular[:50] }}{% if p.titular|length > 50 %}...{% endif %}</td>
+                                <td>{{ p.nr_cadastral or '-' }}</td>
+                                <td>{{ p.nr_cf or '-' }}</td>
+                                <td>{{ p.categorie or '-' }}</td>
+                                <td>{{ p.pozitionare or '-' }}</td>
+                                <td>{{ p.suprafata_totala or '-' }}</td>
+                                <td>{{ p.suprafata_exp or '-' }}</td>
+                                <td>{{ p.admitere or '-' }}</td>
+                                <td class="{% if p.is_ok %}text-primary fw-bold{% else %}text-danger fw-bold{% endif %}">
+                                    {{ p.observatii }}
+                                </td>
+                                <td>
+                                    {% if p.is_ok %}
+                                    <span class="badge bg-success">OK</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">Diferente</span>
+                                    {% endif %}
+                                </td>
+                                {% endif %}
+                            </tr>
+                            {% if p.secondary_positions %}
+                            {% for sec in p.secondary_positions %}
+                            <tr class="table-light">
+                                <td class="fw-bold">{{ sec }}</td>
+                                <td colspan="10" class="fst-italic">comasat cu pozitia {{ p.pozitie }}</td>
+                                <td><span class="badge bg-info">Comasat</span></td>
+                            </tr>
+                            {% endfor %}
+                            {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% if to_process > 0 %}
+                <form action="{{ url_for('doccad.generate') }}" method="post">
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <a href="{{ url_for('doccad.index') }}" class="btn btn-outline-secondary">Reincarcare fisiere</a>
+                        <button type="submit" class="btn btn-info btn-lg text-white" id="btnGenerate">
+                            Genereaza SITUATIE ({{ to_process }} pozitii)
+                        </button>
+                    </div>
+                </form>
+                {% else %}
+                <div class="alert alert-warning mt-3">
+                    Nu exista pozitii noi de procesat. Toate sunt fie completate, fie negasite, fie au erori.
+                </div>
+                <a href="{{ url_for('doccad.index') }}" class="btn btn-outline-secondary">Reincarcare fisiere</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+var form = document.querySelector('form[action*="generate"]');
+if (form) {
+    form.addEventListener('submit', function() {
+        var btn = document.getElementById('btnGenerate');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Se genereaza...';
+    });
+}
+</script>
+{% endblock %}
