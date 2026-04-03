@@ -15,11 +15,9 @@ for d in ['uploads', 'output']:
 from modules.br_generator.routes import bp as br_bp
 from modules.verificare_hpv.routes import bp as hpv_bp
 from modules.organizare_dosare.routes import bp as org_bp
-from modules.doc_cadastrale.routes import bp as doccad_bp
 app.register_blueprint(br_bp)
 app.register_blueprint(hpv_bp)
 app.register_blueprint(org_bp)
-app.register_blueprint(doccad_bp)
 
 
 def cleanup_old_sessions():
