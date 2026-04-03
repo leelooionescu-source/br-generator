@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card shadow-sm">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0">Pas 3: Rezultate organizare dosare</h4>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="border rounded p-3 text-center bg-primary bg-opacity-10">
+                            <div class="text-muted small">Dosare create</div>
+                            <div class="fw-bold fs-3 text-primary">{{ total_folders }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="border rounded p-3 text-center bg-success bg-opacity-10">
+                            <div class="text-muted small">Hot/PV copiate</div>
+                            <div class="fw-bold fs-3 text-success">{{ total_hpv }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="border rounded p-3 text-center bg-info bg-opacity-10">
+                            <div class="text-muted small">Doc. cadastrale copiate</div>
+                            <div class="fw-bold fs-3 text-info">{{ total_doc }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="border rounded p-3 text-center {% if total_missing_hpv + total_missing_doc > 0 %}bg-warning{% else %}bg-success{% endif %} bg-opacity-10">
+                            <div class="text-muted small">Fisiere lipsa</div>
+                            <div class="fw-bold fs-3 {% if total_missing_hpv + total_missing_doc > 0 %}text-warning{% else %}text-success{% endif %}">{{ total_missing_hpv + total_missing_doc }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <table class="table table-bordered table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Dosar</th>
+                            <th>Pozitii HG</th>
+                            <th>Hot/PV copiate</th>
+                            <th>Doc. cad. copiate</th>
+                            <th>Lipsa</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in results %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td class="fw-bold">{{ r.folder_name }}</td>
+                            <td class="text-center">{{ r.total_positions }}</td>
+                            <td class="text-center">
+                                <span class="badge bg-success">{{ r.copied_hpv }}</span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-info">{{ r.copied_doc }}</span>
+                            </td>
+                            <td class="text-center">
+                                {% if r.missing_hpv + r.missing_doc > 0 %}
+                                <span class="badge bg-warning text-dark">{{ r.missing_hpv + r.missing_doc }}</span>
+                                {% else %}
+                                <span class="badge bg-success">0</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="/org/" class="btn btn-outline-secondary">Organizare Noua</a>
+                    <a href="/org/download-all" class="btn btn-success btn-lg">Descarca Tot (ZIP)</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

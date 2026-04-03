@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0">Pas 1: Incarcati fisierele pentru organizare dosare</h4>
+            </div>
+            <div class="card-body">
+                <form action="/org/upload" method="post" enctype="multipart/form-data">
+
+                    <h5 class="mb-3">Borderourile generate (BR / BP)</h5>
+                    {% if has_generated %}
+                    <div class="mb-3">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="br_source" id="br_session" value="session" checked onchange="toggleBrUpload()">
+                            <label class="form-check-label fw-bold text-success" for="br_session">
+                                Foloseste borderourile din sesiunea curenta
+                            </label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="br_source" id="br_upload" value="upload" onchange="toggleBrUpload()">
+                            <label class="form-check-label" for="br_upload">
+                                Incarca alte borderourile
+                            </label>
+                        </div>
+                        <input type="hidden" name="use_session_br" id="use_session_br" value="1">
+                    </div>
+                    {% endif %}
+
+                    <div id="br_upload_area" {% if has_generated %}style="display:none"{% endif %}>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Fisiere Borderou (.xlsx) *</label>
+                            <input type="file" name="borderourile" class="form-control" accept=".xlsx,.xls" multiple>
+                            <div class="form-text">Selectati toate borderourile generate (BR nr. 1, BR nr. 1.1, BP nr. 1)</div>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+                    <h5 class="mb-3">Fisiere Hot si PV</h5>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Fisiere PDF individuale</label>
+                        <input type="file" name="hpv_files" class="form-control" accept=".pdf" multiple>
+                        <div class="form-text">Selectati fisierele H si PV (ex: H si PV nr. 4.pdf). Selectie multipla permisa.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">sau arhiva ZIP cu fisierele Hot/PV</label>
+                        <input type="file" name="hpv_zip" class="form-control" accept=".zip">
+                    </div>
+
+                    <hr class="my-4">
+                    <h5 class="mb-3">Documentatii cadastrale</h5>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Fisiere PDF individuale</label>
+                        <input type="file" name="doc_files" class="form-control" accept=".pdf" multiple>
+                        <div class="form-text">Selectati documentatiile cadastrale (ex: p 1245.pdf, poz 1245.pdf). Selectie multipla permisa.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">sau arhiva ZIP cu documentatiile cadastrale</label>
+                        <input type="file" name="doc_zip" class="form-control" accept=".zip">
+                        <div class="form-text">ZIP-ul poate contine fisiere PDF si/sau foldere per pozitie HG (ex: folder 1245_xxx)</div>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success btn-lg">Analizeaza si Previzualizeaza</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleBrUpload() {
+    var sessionRadio = document.getElementById('br_session');
+    var uploadArea = document.getElementById('br_upload_area');
+    var hiddenField = document.getElementById('use_session_br');
+    if (sessionRadio && sessionRadio.checked) {
+        uploadArea.style.display = 'none';
+        hiddenField.value = '1';
+    } else {
+        uploadArea.style.display = 'block';
+        hiddenField.value = '0';
+    }
+}
+</script>
+{% endblock %}

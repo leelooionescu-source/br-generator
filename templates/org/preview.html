@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card shadow-sm">
+            <div class="card-header bg-info text-white">
+                <h4 class="mb-0">Pas 2: Previzualizare matching</h4>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="border rounded p-3 text-center bg-primary bg-opacity-10">
+                            <div class="text-muted small">Borderourile incarcate</div>
+                            <div class="fw-bold fs-3 text-primary">{{ total_borderourile }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="border rounded p-3 text-center bg-success bg-opacity-10">
+                            <div class="text-muted small">Fisiere Hot/PV detectate</div>
+                            <div class="fw-bold fs-3 text-success">{{ total_hpv_files }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="border rounded p-3 text-center bg-info bg-opacity-10">
+                            <div class="text-muted small">Doc. cadastrale detectate</div>
+                            <div class="fw-bold fs-3 text-info">{{ total_doc_files }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                {% for item in preview %}
+                <div class="card mb-3">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">{{ item.filename }}</h5>
+                        <small class="text-muted">{{ item.total_positions }} pozitii HG | {{ item.total_hotarari }} hotarari distincte</small>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Hot si PV</h6>
+                                {% if item.matched_hpv %}
+                                <ul class="list-unstyled">
+                                    {% for nr, fname in item.matched_hpv.items() %}
+                                    <li class="text-success"><span class="badge bg-success">OK</span> Hot. nr. {{ nr }} &rarr; {{ fname }}</li>
+                                    {% endfor %}
+                                </ul>
+                                {% endif %}
+                                {% if item.missing_hpv %}
+                                <ul class="list-unstyled">
+                                    {% for nr in item.missing_hpv %}
+                                    <li class="text-danger"><span class="badge bg-danger">LIPSA</span> Hot. nr. {{ nr }} - fisier negasit</li>
+                                    {% endfor %}
+                                </ul>
+                                {% endif %}
+                                {% if not item.matched_hpv and not item.missing_hpv %}
+                                <p class="text-muted small">Nicio hotarare detectata</p>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Documentatii cadastrale</h6>
+                                {% if item.matched_doc %}
+                                <div style="max-height: 200px; overflow-y: auto;">
+                                <ul class="list-unstyled small">
+                                    {% for poz, fname in item.matched_doc.items() %}
+                                    <li class="text-success"><span class="badge bg-success">OK</span> Poz. {{ poz }} &rarr; {{ fname }}</li>
+                                    {% endfor %}
+                                </ul>
+                                </div>
+                                {% endif %}
+                                {% if item.missing_doc %}
+                                <div style="max-height: 150px; overflow-y: auto;">
+                                <ul class="list-unstyled small">
+                                    {% for poz in item.missing_doc %}
+                                    <li class="text-danger"><span class="badge bg-danger">LIPSA</span> Poz. {{ poz }} - fisier negasit</li>
+                                    {% endfor %}
+                                </ul>
+                                </div>
+                                {% endif %}
+                                {% if not item.matched_doc and not item.missing_doc %}
+                                <p class="text-muted small">Nicio pozitie detectata</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="/org/" class="btn btn-outline-secondary">Inapoi - Reincarcare fisiere</a>
+                    <form action="/org/organize" method="post">
+                        <button type="submit" class="btn btn-success btn-lg">Organizeaza Dosarele</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
