@@ -2,7 +2,10 @@ import os
 import uuid
 import shutil
 import json
+import logging
 from flask import Blueprint, render_template, request, redirect, url_for, session, send_from_directory, flash
+
+logger = logging.getLogger(__name__)
 from modules.doc_cadastrale.process_doc_cad import (
     extract_zip, scan_and_extract, build_preview, write_to_excel, detect_doc_type
 )
@@ -10,6 +13,24 @@ from modules.doc_cadastrale.process_doc_cad import (
 bp = Blueprint('doccad', __name__, url_prefix='/doccad', template_folder='../../templates/doccad')
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+
+def _log_dir_tree(path, prefix="", max_depth=4, current_depth=0):
+    """Log directory tree for debugging."""
+    if current_depth > max_depth:
+        return
+    try:
+        items = sorted(os.listdir(path))
+        for item in items[:50]:  # limit to 50 items per dir
+            full = os.path.join(path, item)
+            if os.path.isdir(full):
+                logger.info(f"{prefix}[DIR] {item}/")
+                _log_dir_tree(full, prefix + "  ", max_depth, current_depth + 1)
+            else:
+                size = os.path.getsize(full)
+                logger.info(f"{prefix}{item} ({size} bytes)")
+    except Exception as e:
+        logger.error(f"Error listing {path}: {e}")
 
 
 def get_session_dir(subdir):
@@ -35,6 +56,7 @@ def upload():
 
     # --- SITUATIE Excel ---
     situatie_file = request.files.get('situatie')
+    logger.info(f"Upload request - situatie: {situatie_file.filename if situatie_file else 'None'}")
     if not situatie_file or not situatie_file.filename:
         flash('Incarcati fisierul SITUATIE Excel!', 'error')
         return redirect(url_for('doccad.index'))
@@ -54,8 +76,12 @@ def upload():
     if doc_zip and doc_zip.filename:
         zip_path = os.path.join(doccad_dir, 'doc_cad.zip')
         doc_zip.save(zip_path)
+        zip_size = os.path.getsize(zip_path)
+        logger.info(f"ZIP saved: {zip_path} ({zip_size} bytes)")
         extract_zip(zip_path, extract_dir)
         os.remove(zip_path)
+        # Log extracted contents
+        _log_dir_tree(extract_dir, max_depth=4)
     elif doc_files and any(f.filename for f in doc_files):
         for f in doc_files:
             if not f.filename:
@@ -65,6 +91,7 @@ def upload():
             full_path = os.path.join(extract_dir, rel_path)
             os.makedirs(os.path.dirname(full_path), exist_ok=True)
             f.save(full_path)
+        _log_dir_tree(extract_dir, max_depth=4)
     else:
         flash('Incarcati documentatiile cadastrale (ZIP sau folder)!', 'error')
         return redirect(url_for('doccad.index'))
@@ -84,9 +111,26 @@ def analyze():
         return redirect(url_for('doccad.index'))
 
     try:
+        # Log what we're working with
+        logger.info(f"Analyzing extract_dir: {extract_dir}")
+        _log_dir_tree(extract_dir, max_depth=3)
+
         doc_type, extracted = scan_and_extract(extract_dir)
+        logger.info(f"detect result: type={doc_type}, items={len(extracted)}")
         if not extracted:
-            flash('Nu s-au gasit documentatii cadastrale in fisierele incarcate!', 'error')
+            # Build debug info about what was found
+            debug_items = []
+            try:
+                for root, dirs, files in os.walk(extract_dir):
+                    rel = os.path.relpath(root, extract_dir)
+                    for f in files[:10]:
+                        debug_items.append(f"{rel}/{f}" if rel != "." else f)
+                    if len(debug_items) > 20:
+                        break
+            except Exception:
+                pass
+            debug_str = ", ".join(debug_items[:15]) if debug_items else "director gol"
+            flash(f'Nu s-au gasit documentatii cadastrale! Fisiere gasite: {debug_str}', 'error')
             return redirect(url_for('doccad.index'))
 
         # Save extracted data to session (serialize for JSON)
