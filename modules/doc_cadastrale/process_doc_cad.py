@@ -10,11 +10,15 @@ Suporta doua tipuri:
 
 import os
 import re
+import gc
 import shutil
 import zipfile
 import traceback
+import logging
 from datetime import datetime
 from collections import defaultdict
+
+logger = logging.getLogger(__name__)
 
 import pdfplumber
 import openpyxl
@@ -63,12 +67,15 @@ def extract_text_from_pdf(pdf_path):
     try:
         pdf = fitz.open(pdf_path)
         for page in pdf:
-            mat = fitz.Matrix(300/72, 300/72)
+            # Use 200 DPI instead of 300 to save memory on server
+            mat = fitz.Matrix(200/72, 200/72)
             pix = page.get_pixmap(matrix=mat)
             img = Image.open(io.BytesIO(pix.tobytes('png')))
             text = pytesseract.image_to_string(img, lang='ron')
             if text:
                 full_text += text + "\n"
+            # Free memory immediately
+            del pix, img
         pdf.close()
     except Exception:
         pass
@@ -1116,11 +1123,13 @@ def scan_and_extract(extract_dir):
             items.remove(item_path)
 
     if doc_type == 'folder_structure':
-        for folder_path in sorted(items):
+        total_items = len(items)
+        for idx, folder_path in enumerate(sorted(items), 1):
             folder_name = os.path.basename(folder_path)
             primary_pos, secondary_pos, nr_cad = parse_folder_name(folder_name)
             if primary_pos is None:
                 continue
+            logger.info(f"Processing {idx}/{total_items}: {folder_name}")
             try:
                 data = extract_folder_data(folder_path)
                 results.append({
@@ -1142,6 +1151,7 @@ def scan_and_extract(extract_dir):
                     'data': None,
                     'error': str(e),
                 })
+            gc.collect()
 
         # Process EXTRA HG folders
         for folder_path in sorted(extra_hg_items):
@@ -1172,11 +1182,13 @@ def scan_and_extract(extract_dir):
                 })
 
     elif doc_type == 'scan_complet':
-        for pdf_path in sorted(items):
+        total_items = len(items)
+        for idx, pdf_path in enumerate(sorted(items), 1):
             pdf_name = os.path.basename(pdf_path)
             poz, sec_positions = parse_pdf_name(pdf_name)
             if poz is None:
                 continue
+            logger.info(f"Processing {idx}/{total_items}: {pdf_name}")
             try:
                 data = extract_scan_complet_data(pdf_path)
                 results.append({
@@ -1198,6 +1210,7 @@ def scan_and_extract(extract_dir):
                     'data': None,
                     'error': str(e),
                 })
+            gc.collect()
 
     return doc_type, results
 

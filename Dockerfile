@@ -18,4 +18,4 @@ RUN mkdir -p uploads output
 
 EXPOSE 10000
 
-CMD gunicorn --bind 0.0.0.0:${PORT:-10000} --timeout 300 --workers 2 app:app
+CMD gunicorn --bind 0.0.0.0:${PORT:-10000} --timeout 600 --workers 1 --threads 2 app:app
