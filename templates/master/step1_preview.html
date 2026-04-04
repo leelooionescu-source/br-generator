@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header text-white py-3" style="background: linear-gradient(135deg, #0d6efd, #6610f2);">
+                <h4 class="mb-0">MASTER COMISII - Preview Import - HG nr. {{ hg_number }}</h4>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <div class="border rounded p-3 text-center">
+                            <div class="text-muted small">Format detectat</div>
+                            <div class="fw-bold fs-5 text-primary">{{ stats.format }}</div>
+                            <div class="small">{{ 'Tabel afisare comisie' if stats.format == 'A' else 'SITUATIE TOTAL' }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="border rounded p-3 text-center bg-success bg-opacity-10">
+                            <div class="text-muted small">Pozitii de importat</div>
+                            <div class="fw-bold fs-4 text-success">{{ stats.total }}</div>
+                        </div>
+                    </div>
+                    {% if stats.filtered > 0 %}
+                    <div class="col-md-3">
+                        <div class="border rounded p-3 text-center bg-warning bg-opacity-10">
+                            <div class="text-muted small">Filtrate (non-OK)</div>
+                            <div class="fw-bold fs-4 text-warning">{{ stats.filtered }}</div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    <div class="col-md-3">
+                        <div class="border rounded p-3 text-center">
+                            <div class="text-muted small">UAT-uri</div>
+                            <div class="fw-bold fs-5">{{ stats.uats|length }}</div>
+                            <div class="small text-muted">{{ stats.uats|join(', ') }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <h5>Preview date (primele {{ stats.preview|length }} randuri)</h5>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Poz. HG</th>
+                                <th>Judet</th>
+                                <th>UAT</th>
+                                <th>Proprietar</th>
+                                <th>Nr. cadastral</th>
+                                <th>Suprafata</th>
+                                <th>Valoare</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for r in stats.preview %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td>{{ r.poz_hg }}</td>
+                                <td>{{ r.judet }}</td>
+                                <td>{{ r.uat }}</td>
+                                <td>{{ r.nume1 }}</td>
+                                <td>{{ r.nr_cadastral }}</td>
+                                <td>{{ r.suprafata }}</td>
+                                <td>{{ r.valoare }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{{ url_for('master.index') }}" class="btn btn-outline-secondary">Inapoi</a>
+                    <form action="{{ url_for('master.do_import') }}" method="post">
+                        <button type="submit" class="btn btn-success btn-lg">Confirma Import in MASTER</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-9">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-success text-white text-center py-3">
+                <h4 class="mb-0">MASTER COMISII - Rezultate</h4>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    {% if word_result %}
+                    <div class="col-md-6">
+                        <div class="border rounded p-3 text-center bg-success bg-opacity-10">
+                            <div class="text-muted small">Document Word generat</div>
+                            <div class="fw-bold fs-5 text-success">{{ word_result.count }} documente</div>
+                            <div class="small">{{ word_result.filename }}</div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    <div class="col-md-6">
+                        <div class="border rounded p-3 text-center bg-primary bg-opacity-10">
+                            <div class="text-muted small">MASTER actualizat</div>
+                            <div class="fw-bold fs-5 text-primary">Disponibil pentru descarcare</div>
+                        </div>
+                    </div>
+                </div>
+
+                <h5>Fisiere disponibile</h5>
+                <table class="table table-bordered">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Fisier</th>
+                            <th>Tip</th>
+                            <th class="text-center">Descarcare</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>MASTER actualizat HG {{ hg_number }}.xlsx</td>
+                            <td><span class="badge bg-primary">Excel</span></td>
+                            <td class="text-center">
+                                <a href="{{ url_for('master.download_master') }}" class="btn btn-sm btn-outline-primary">Descarca</a>
+                            </td>
+                        </tr>
+                        {% if word_result %}
+                        <tr>
+                            <td>{{ word_result.filename }}</td>
+                            <td><span class="badge bg-success">Word</span></td>
+                            <td class="text-center">
+                                <a href="{{ url_for('master.download_file', filename=word_result.filename) }}" class="btn btn-sm btn-outline-success">Descarca</a>
+                            </td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{{ url_for('master.index') }}" class="btn btn-outline-secondary">Procesare Noua</a>
+                    <div class="d-flex gap-2">
+                        {% if not word_result %}
+                        <a href="{{ url_for('master.step3') }}" class="btn btn-outline-primary">Continua la Etapa 3 (Word)</a>
+                        {% endif %}
+                        <a href="{{ url_for('master.download_all') }}" class="btn btn-primary btn-lg">Descarca Tot (ZIP)</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

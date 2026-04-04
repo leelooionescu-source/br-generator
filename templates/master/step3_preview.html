@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-9">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header text-white py-3" style="background: linear-gradient(135deg, #0d6efd, #6610f2);">
+                <h4 class="mb-0">MASTER COMISII - Etapa 3: Generare Word</h4>
+            </div>
+            <div class="card-body">
+                {% if update_count is not none %}
+                <div class="alert alert-success">
+                    <strong>Coloane 30-38 actualizate!</strong> {{ update_count }} pozitii completate.
+                </div>
+                {% endif %}
+
+                <div class="alert alert-info">
+                    <strong>MASTER:</strong> {{ merge_preview.total }} pozitii de procesat |
+                    UAT-uri: {{ merge_preview.uats|length }}
+                    {% for uat, cnt in merge_preview.uats.items() %}
+                    <span class="badge bg-secondary">{{ uat }}: {{ cnt }}</span>
+                    {% endfor %}
+                </div>
+
+                {% if merge_preview.missing_fields %}
+                <div class="alert alert-warning">
+                    <strong>Atentie!</strong> Urmatoarele campuri lipsesc din unele pozitii:
+                    {% for f in merge_preview.missing_fields %}
+                    <span class="badge bg-warning text-dark">{{ f }}</span>
+                    {% endfor %}
+                    <br><small>Documentul Word va fi generat, dar campurile respective vor ramane goale.</small>
+                </div>
+                {% endif %}
+
+                <form action="{{ url_for('master.do_generate') }}" method="post" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Sablon Word (.docx) *</label>
+                        <input type="file" name="template_word" class="form-control" accept=".docx,.doc" required>
+                        <div class="form-text">Sablon cu MERGEFIELD-uri (H si Pv lipsa cerere-acte.docx)</div>
+                    </div>
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{{ url_for('master.step2') }}" class="btn btn-outline-secondary">Inapoi la Etapa 2</a>
+                        <button type="submit" class="btn btn-success btn-lg">Genereaza Document Word</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

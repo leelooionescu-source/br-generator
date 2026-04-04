@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header text-white py-3" style="background: linear-gradient(135deg, #0d9488, #0891b2);">
+                <h4 class="mb-0">Detalii Email</h4>
+            </div>
+            <div class="card-body">
+                <!-- Info email -->
+                <div class="row mb-4">
+                    <div class="col-md-8">
+                        <h5>{{ email.subject }}</h5>
+                        <div class="text-muted">
+                            <strong>De la:</strong> {{ email.sender }}<br>
+                            <strong>Data:</strong> {{ email.received_date }}
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        {% if email.hg_number %}
+                        <span class="badge bg-success fs-6">HG {{ email.hg_number }}</span>
+                        {% endif %}
+                        {% if email.br_number %}
+                        <span class="badge bg-primary fs-6">{{ email.br_number }}</span>
+                        {% endif %}
+                        {% if email.br_date %}
+                        <span class="badge bg-secondary fs-6">{{ email.br_date }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Editare campuri parsate -->
+                <div class="card mb-4 border-warning">
+                    <div class="card-header bg-warning bg-opacity-10">
+                        <strong>Editare campuri identificate</strong>
+                        <small class="text-muted">(modificati daca parsarea automata nu e corecta)</small>
+                    </div>
+                    <div class="card-body">
+                        <form action="{{ url_for('recipise.update_fields', email_id=email.id) }}" method="post">
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="form-label small">HG</label>
+                                    <input type="text" name="hg_number" class="form-control form-control-sm"
+                                        value="{{ email.hg_number or '' }}" placeholder="Ex: 1409/2024">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small">BR/BP</label>
+                                    <input type="text" name="br_number" class="form-control form-control-sm"
+                                        value="{{ email.br_number or '' }}" placeholder="Ex: BR 1, BP 2">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small">Data</label>
+                                    <input type="text" name="br_date" class="form-control form-control-sm"
+                                        value="{{ email.br_date or '' }}" placeholder="Ex: 12.03.2026">
+                                </div>
+                                <div class="col-md-1 d-flex align-items-end">
+                                    <button type="submit" class="btn btn-sm btn-warning w-100">Salveaza</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Atasamente -->
+                {% if attachments %}
+                <h5>Atasamente ({{ attachments|length }})</h5>
+                <table class="table table-bordered table-sm">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Fisier</th>
+                            <th>Dimensiune</th>
+                            <th class="text-center">Descarcare</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for att in attachments %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ att.filename }}</td>
+                            <td>{{ "%.1f"|format(att.size / 1024) }} KB</td>
+                            <td class="text-center">
+                                <a href="{{ url_for('recipise.download_attachment', att_id=att.id) }}"
+                                   class="btn btn-sm btn-outline-success">Descarca</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% endif %}
+
+                <!-- Corpul emailului -->
+                <h5 class="mt-4">Mesaj</h5>
+                <div class="border rounded p-3 bg-light" style="max-height: 400px; overflow-y: auto; white-space: pre-wrap; font-size: 0.85rem;">{{ email.body }}</div>
+
+                <div class="mt-4">
+                    <a href="{{ url_for('recipise.index') }}" class="btn btn-outline-secondary">Inapoi la lista</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

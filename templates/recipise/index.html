@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-12">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header text-white py-3 d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #0d9488, #0891b2);">
+                <h4 class="mb-0">Centralizare Recipise</h4>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('recipise.export_excel') }}" class="btn btn-light btn-sm fw-bold">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="me-1" viewBox="0 0 16 16">
+                            <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5v2z"/>
+                            <path d="M4.603 14.087a.81.81 0 0 1-.438-.42c-.195-.388-.13-.776.08-1.102.198-.307.526-.568.897-.787a7.68 7.68 0 0 1 1.482-.645 19.697 19.697 0 0 0 1.062-2.227 7.269 7.269 0 0 1-.43-1.295c-.086-.4-.119-.796-.046-1.136.075-.354.274-.672.65-.823.192-.077.4-.12.602-.077a.7.7 0 0 1 .477.365c.088.164.12.356.127.538.007.188-.012.396-.047.614-.084.51-.27 1.134-.52 1.794a10.954 10.954 0 0 0 .98 1.686 5.753 5.753 0 0 1 1.334.05c.364.066.734.195.96.465.12.144.193.32.2.518.007.192-.047.382-.138.563a1.04 1.04 0 0 1-.354.416.856.856 0 0 1-.51.138c-.331-.014-.654-.196-.933-.417a6.12 6.12 0 0 1-.911-.95 11.651 11.651 0 0 0-1.997.406 11.307 11.307 0 0 1-1.02 1.51c-.292.35-.609.656-.927.787a.793.793 0 0 1-.58.029z"/>
+                        </svg>
+                        Export Excel
+                    </a>
+                    <form action="{{ url_for('recipise.sync') }}" method="post" class="d-inline">
+                        <button type="submit" class="btn btn-light btn-sm fw-bold">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-repeat me-1" viewBox="0 0 16 16">
+                                <path d="M11.534 7h3.932a.25.25 0 0 1 .192.41l-1.966 2.36a.25.25 0 0 1-.384 0l-1.966-2.36a.25.25 0 0 1 .192-.41zm-11 2h3.932a.25.25 0 0 0 .192-.41L2.692 6.23a.25.25 0 0 0-.384 0L.342 8.59A.25.25 0 0 0 .534 9z"/>
+                                <path fill-rule="evenodd" d="M8 3c-1.552 0-2.94.707-3.857 1.818a.5.5 0 1 1-.771-.636A6.002 6.002 0 0 1 13.917 7H12.9A5.002 5.002 0 0 0 8 3zM3.1 9a5.002 5.002 0 0 0 8.757 2.182.5.5 0 1 1 .771.636A6.002 6.002 0 0 1 2.083 9H3.1z"/>
+                            </svg>
+                            Sincronizeaza din Outlook
+                        </button>
+                    </form>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if sync_result %}
+                <div class="alert alert-success alert-dismissible fade show">
+                    <strong>Sincronizare completa!</strong>
+                    {{ sync_result.new }} emailuri noi importate,
+                    {{ sync_result.skipped }} deja existente,
+                    {{ sync_result.total_attachments }} atasamente salvate.
+                    {% if sync_result.errors > 0 %}
+                    <span class="text-warning">({{ sync_result.errors }} erori)</span>
+                    {% endif %}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endif %}
+
+                <!-- Statistici -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="border rounded p-3 text-center">
+                            <div class="text-muted small">Total emailuri</div>
+                            <div class="fw-bold fs-4">{{ stats.total }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="border rounded p-3 text-center bg-success bg-opacity-10">
+                            <div class="text-muted small">Cu HG identificat</div>
+                            <div class="fw-bold fs-4 text-success">{{ stats.with_hg }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="border rounded p-3 text-center bg-primary bg-opacity-10">
+                            <div class="text-muted small">Cu BR/BP identificat</div>
+                            <div class="fw-bold fs-4 text-primary">{{ stats.with_br }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="border rounded p-3 text-center">
+                            <div class="text-muted small">Total atasamente</div>
+                            <div class="fw-bold fs-4">{{ stats.total_attachments }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filtre -->
+                <form method="get" class="row g-2 mb-3 align-items-end">
+                    <div class="col-md-3">
+                        <label class="form-label small">Filtru HG</label>
+                        <select name="hg" class="form-select form-select-sm">
+                            <option value="">Toate</option>
+                            {% for h in hg_list %}
+                            <option value="{{ h.hg_number }}" {{ 'selected' if filters.hg == h.hg_number }}>
+                                HG {{ h.hg_number }} ({{ h.cnt }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small">Filtru BR/BP</label>
+                        <input type="text" name="br" class="form-control form-control-sm"
+                            placeholder="Ex: BR 1, BP 2" value="{{ filters.br }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small">Expeditor</label>
+                        <input type="text" name="sender" class="form-control form-control-sm"
+                            placeholder="Email sau nume" value="{{ filters.sender }}">
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-sm btn-outline-primary w-100">Filtreaza</button>
+                    </div>
+                </form>
+
+                <!-- Tabel emailuri -->
+                {% if emails %}
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 120px;">Data</th>
+                                <th style="width: 180px;">Expeditor</th>
+                                <th>Subiect</th>
+                                <th style="width: 110px;">HG</th>
+                                <th style="width: 90px;">BR/BP</th>
+                                <th style="width: 80px;">Data BR</th>
+                                <th style="width: 50px;" class="text-center">Atas.</th>
+                                <th style="width: 80px;" class="text-center">Actiuni</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for e in emails %}
+                            <tr>
+                                <td class="small">{{ e.received_date[:16] if e.received_date else '' }}</td>
+                                <td class="small text-truncate" style="max-width: 180px;" title="{{ e.sender }}">{{ e.sender }}</td>
+                                <td class="small">{{ e.subject }}</td>
+                                <td>
+                                    {% if e.hg_number %}
+                                    <span class="badge bg-success">{{ e.hg_number }}</span>
+                                    {% else %}
+                                    <span class="text-muted">—</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if e.br_number %}
+                                    <span class="badge bg-primary">{{ e.br_number }}</span>
+                                    {% else %}
+                                    <span class="text-muted">—</span>
+                                    {% endif %}
+                                </td>
+                                <td class="small">{{ e.br_date or '' }}</td>
+                                <td class="text-center">
+                                    {% if e.attachment_count > 0 %}
+                                    <span class="badge bg-secondary">{{ e.attachment_count }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    <a href="{{ url_for('recipise.detail', email_id=e.id) }}" class="btn btn-sm btn-outline-primary" title="Detalii">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                                            <path d="M10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"/>
+                                            <path d="M0 8s3-5.5 8-5.5S16 8 16 8s-3 5.5-8 5.5S0 8 0 8zm8 3.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/>
+                                        </svg>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center text-muted py-5">
+                    <p class="fs-5">Nu exista emailuri centralizate.</p>
+                    <p>Apasati <strong>Sincronizeaza din Outlook</strong> pentru a importa emailurile din folderul A.N.D.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

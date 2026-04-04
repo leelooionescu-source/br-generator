@@ -60,6 +60,44 @@
                     </div>
                 </div>
             </div>
+            <div class="col-md-5">
+                <div class="card shadow-sm h-100" style="border-color: #6610f2;">
+                    <div class="card-header text-white text-center py-3" style="background: linear-gradient(135deg, #0d6efd, #6610f2);">
+                        <h4 class="mb-0">MASTER COMISII</h4>
+                    </div>
+                    <div class="card-body d-flex flex-column">
+                        <p>Pipeline complet pentru MASTER HSD: import date din tabelele de comisie, completare coloane (HG, decizii, membri), generare Word prin mail merge.</p>
+                        <ul class="small text-muted">
+                            <li>Etapa 1 - Import date (Format A / Format B)</li>
+                            <li>Etapa 2 - Completare coloane 30-38</li>
+                            <li>Etapa 3 - Generare Word MERGEFIELD</li>
+                        </ul>
+                        <div class="mt-auto d-grid">
+                            <a href="/master/" class="btn btn-lg" style="background: linear-gradient(135deg, #0d6efd, #6610f2); color: white;">Deschide</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% if is_windows %}
+            <div class="col-md-5">
+                <div class="card shadow-sm h-100" style="border-color: #0d9488;">
+                    <div class="card-header text-white text-center py-3" style="background: linear-gradient(135deg, #0d9488, #0891b2);">
+                        <h4 class="mb-0">Centralizare Recipise</h4>
+                    </div>
+                    <div class="card-body d-flex flex-column">
+                        <p>Centralizare automata a emailurilor cu recipise din Outlook, grupate pe proiect HG si numar de borderou (BR/BP).</p>
+                        <ul class="small text-muted">
+                            <li>Sincronizare automata din Outlook (folder A.N.D.)</li>
+                            <li>Parsare HG, BR/BP, data din subiect</li>
+                            <li>Filtrare, cautare si descarcare atasamente</li>
+                        </ul>
+                        <div class="mt-auto d-grid">
+                            <a href="/recipise/" class="btn btn-lg text-white" style="background: linear-gradient(135deg, #0d9488, #0891b2);">Deschide</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
         </div>
     </div>
 </div>

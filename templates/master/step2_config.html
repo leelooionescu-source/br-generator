@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header text-white py-3" style="background: linear-gradient(135deg, #0d6efd, #6610f2);">
+                <h4 class="mb-0">MASTER COMISII - Etapa 2: Completare coloane 30-38</h4>
+            </div>
+            <div class="card-body">
+                {% if import_result %}
+                <div class="alert alert-success">
+                    <strong>Import reusit!</strong> {{ import_result.imported }} pozitii importate in MASTER
+                    (randurile {{ import_result.start_row }}–{{ import_result.end_row }},
+                    Nr. PV si Hot: {{ import_result.pv_start }}–{{ import_result.pv_end }})
+                </div>
+                {% endif %}
+
+                <div class="alert alert-info">
+                    <strong>MASTER:</strong> {{ master_stats.total }} pozitii |
+                    UAT-uri: {{ master_stats.uat_counts|length }}
+                    {% for uat, cnt in master_stats.uat_counts.items() %}
+                    <span class="badge bg-secondary">{{ uat }}: {{ cnt }}</span>
+                    {% endfor %}
+                </div>
+
+                <form action="{{ url_for('master.do_update_cols') }}" method="post">
+                    <h5 class="mt-4">Valori fixe (aceleasi pentru toate pozitiile)</h5>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Col 30 (AD) — Text complet HG</label>
+                        <textarea name="col_30" class="form-control" rows="3" placeholder="Ex: Hotărârii Guvernului nr. 1409/2024 privind declanșarea procedurilor de expropriere...">{{ prefill.get('col_30', '') }}</textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Col 31 (AE) — Antet proiect</label>
+                        <textarea name="col_31" class="form-control" rows="3" placeholder='Ex: "Autostrada Lugoj - Deva"&#10;STATUL ROMÂN prin&#10;Compania Națională de Administrare a Infrastructurii Rutiere - S.A.'>{{ prefill.get('col_31', '') }}</textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Col 32 (AF) — Decizie de expropriere</label>
+                        <input type="text" name="col_32" class="form-control" placeholder="Ex: Deciziei de expropriere nr. 263 din 10.03.2025" value="{{ prefill.get('col_32', '') }}">
+                    </div>
+
+                    <h5 class="mt-4">Valori per UAT (comisie locala)</h5>
+                    {% for uat in uats %}
+                    <div class="card mb-3 border-primary">
+                        <div class="card-header bg-primary bg-opacity-10 fw-bold">
+                            UAT: {{ uat }} ({{ master_stats.uat_counts.get(uat, 0) }} pozitii)
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-2">
+                                <label class="form-label">Col 33 — Decizie numire comisie</label>
+                                <input type="text" name="uat_{{ loop.index0 }}_col_33" class="form-control" placeholder="Ex: Deciziei nr. 1547 din 20.12.2024 emisă de C.N.A.I.R. - S.A.">
+                                <input type="hidden" name="uat_{{ loop.index0 }}_name" value="{{ uat }}">
+                            </div>
+                            <div class="row">
+                                {% for i in range(5) %}
+                                <div class="col-md-6 mb-2">
+                                    <label class="form-label small">Col {{ 34 + i }} — Membru {{ i + 1 }}
+                                        {% if i == 0 %}(Presedinte){% elif i == 1 %}(Vicepresedinte){% elif i == 2 %}(Secretar){% endif %}
+                                    </label>
+                                    <input type="text" name="uat_{{ loop.index0 }}_col_{{ 34 + i }}" class="form-control form-control-sm" placeholder="Nume si prenume">
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{{ url_for('master.index') }}" class="btn btn-outline-secondary">Inapoi</a>
+                        <div class="d-flex gap-2">
+                            <a href="{{ url_for('master.step3') }}" class="btn btn-outline-primary">Sari la Etapa 3 (Word)</a>
+                            <button type="submit" class="btn btn-success btn-lg">Completeaza MASTER</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

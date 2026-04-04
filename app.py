@@ -15,9 +15,17 @@ for d in ['uploads', 'output']:
 from modules.br_generator.routes import bp as br_bp
 from modules.verificare_hpv.routes import bp as hpv_bp
 from modules.organizare_dosare.routes import bp as org_bp
+from modules.master_comisii.routes import bp as master_bp
 app.register_blueprint(br_bp)
 app.register_blueprint(hpv_bp)
 app.register_blueprint(org_bp)
+app.register_blueprint(master_bp)
+
+# Centralizare Recipise — doar pe Windows (necesita Outlook)
+import sys
+if sys.platform == 'win32':
+    from modules.centralizare_recipise.routes import bp as recipise_bp
+    app.register_blueprint(recipise_bp)
 
 
 def cleanup_old_sessions():
@@ -35,7 +43,7 @@ def cleanup_old_sessions():
 @app.route('/')
 def home():
     cleanup_old_sessions()
-    return render_template('home.html')
+    return render_template('home.html', is_windows=sys.platform == 'win32')
 
 
 if __name__ == '__main__':
